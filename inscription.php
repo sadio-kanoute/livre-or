@@ -1,20 +1,24 @@
 <?php
-include 'config.php';
+session_start();
+require_once 'config.php'; 
 include 'header.php';
 
-$erreur = '';
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $login = $_POST['login'];
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $login = trim($_POST['login']);
     $password = $_POST['password'];
     $confirm = $_POST['confirm'];
 
-    if ($password !== $confirm) {
-        $erreur = "Les mots de passe ne correspondent pas.";
+    if (empty($login) || empty($password) || empty($confirm)) {
+        $errors[] = "Tous les champs sont obligatoires.";
+    } elseif ($password !== $confirm) {
+        $errors[] = "Les mots de passe ne correspondent pas.";
     } else {
-        $stmt = $pdo->prepare("SELECT * FROM utilisateurs WHERE login = ?");
+        $stmt = $pdo->prepare("SELECT id FROM utilisateurs WHERE login = ?");
         $stmt->execute([$login]);
-        if ($stmt->rowCount() > 0) {
-            $erreur = "Ce login existe déjà.";
+        if ($stmt->fetch()) {
+            $errors[] = "Ce login est déjà utilisé.";
         } else {
             $hash = password_hash($password, PASSWORD_DEFAULT);
             $insert = $pdo->prepare("INSERT INTO utilisateurs (login, password) VALUES (?, ?)");
@@ -26,15 +30,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<main>
+<main class="form-page">
   <h2>Inscription</h2>
+
+  <?php if ($errors): ?>
+    <div class="error-box">
+      <?php foreach ($errors as $e): ?>
+        <p><?= htmlspecialchars($e) ?></p>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+
   <form method="POST">
-    <input type="text" name="login" placeholder="Login" required>
-    <input type="password" name="password" placeholder="Mot de passe" required>
-    <input type="password" name="confirm" placeholder="Confirmer le mot de passe" required>
-    <button type="submit">S'inscrire</button>
+    <label for="login">Login</label>
+    <input type="text" name="login" id="login" required>
+
+    <label for="password">Mot de passe</label>
+    <input type="password" name="password" id="password" required>
+
+    <label for="confirm">Confirmation</label>
+    <input type="password" name="confirm" id="confirm" required>
+
+    <button type="submit" class="btn">S'inscrire</button>
   </form>
-  <p class="error"><?= $erreur ?></p>
 </main>
 
 <?php include 'footer.php'; ?>

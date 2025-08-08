@@ -13,7 +13,7 @@ session_start();
     <nav>
       <ul>
         <li><a href="index.php">Accueil</a></li>
-        <li><a href="livre-or.php">Livre d’or</a></li>
+        <li><a href="livre-or.php">Livre d'or</a></li>
 
         <?php if (isset($_SESSION['login'])): ?>
           <li><a href="commentaire.php">Commenter</a></li>

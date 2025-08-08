@@ -1,26 +1,40 @@
 <?php
-include 'config.php';
+session_start();
+require_once 'config.php';
 include 'header.php';
 
-$commentaires = $pdo->query("
-  SELECT commentaires.commentaire, commentaires.date, utilisateurs.login 
-  FROM commentaires 
-  INNER JOIN utilisateurs ON commentaires.id_utilisateur = utilisateurs.id 
-  ORDER BY commentaires.date DESC
-")->fetchAll();
+
+$query = $pdo->query("
+    SELECT commentaires.commentaire, commentaires.date, utilisateurs.login 
+    FROM commentaires 
+    INNER JOIN utilisateurs ON commentaires.id_utilisateur = utilisateurs.id 
+    ORDER BY commentaires.date DESC
+");
+
+$commentaires = $query->fetchAll();
 ?>
 
-<main>
+<main class="comments-page">
   <h2>Livre d'or</h2>
-  <?php foreach ($commentaires as $c): ?>
-    <div class="comment">
-      <p><strong>Posté le <?= date("d/m/Y à H:i", strtotime($c['date'])) ?> par <?= htmlspecialchars($c['login']) ?> :</strong></p>
-      <p><?= nl2br(htmlspecialchars($c['commentaire'])) ?></p>
-    </div>
-  <?php endforeach; ?>
 
-  <?php if (isset($_SESSION['login'])): ?>
-    <p><a href="commentaire.php">→ Ajouter un commentaire</a></p>
+  <?php if (isset($_SESSION['user'])): ?>
+    <a href="commentaire.php" class="btn">Ajouter un commentaire</a>
+  <?php endif; ?>
+
+  <?php if (count($commentaires) > 0): ?>
+    <div class="comments-list">
+      <?php foreach ($commentaires as $com): ?>
+        <div class="comment-card">
+          <p class="comment-meta">
+            Posté le <?= date('d/m/Y H:i', strtotime($com['date'])) ?>
+            par <strong><?= htmlspecialchars($com['login']) ?></strong>
+          </p>
+          <p class="comment-text"><?= nl2br(htmlspecialchars($com['commentaire'])) ?></p>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php else: ?>
+    <p>Aucun commentaire pour le moment. Soyez le premier !</p>
   <?php endif; ?>
 </main>
 

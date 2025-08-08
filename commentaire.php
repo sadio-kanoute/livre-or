@@ -1,26 +1,49 @@
 <?php
-include 'config.php';
+session_start();
+require_once 'config.php';
 include 'header.php';
 
-if (!isset($_SESSION['login'])) {
+if (!isset($_SESSION['user'])) {
     header("Location: connexion.php");
     exit();
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $commentaire = $_POST['commentaire'];
-    $stmt = $pdo->prepare("INSERT INTO commentaires (commentaire, id_utilisateur, date) VALUES (?, ?, NOW())");
-    $stmt->execute([$commentaire, $_SESSION['id']]);
-    header("Location: livre-or.php");
-    exit();
+$errors = [];
+$success = false;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $commentaire = trim($_POST['commentaire']);
+
+    if (empty($commentaire)) {
+        $errors[] = "Le champ commentaire est vide.";
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO commentaires (commentaire, id_utilisateur, date) VALUES (?, ?, NOW())");
+        $stmt->execute([
+            $commentaire,
+            $_SESSION['user']['id']
+        ]);
+        $success = true;
+        header("Location: livre-or.php");
+        exit();
+    }
 }
 ?>
 
-<main>
+<main class="form-page">
   <h2>Ajouter un commentaire</h2>
+
+  <?php if ($errors): ?>
+    <div class="error-box">
+      <?php foreach ($errors as $e): ?>
+        <p><?= htmlspecialchars($e) ?></p>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+
   <form method="POST">
-    <textarea name="commentaire" placeholder="Votre commentaire" required></textarea>
-    <button type="submit">Poster</button>
+    <label for="commentaire">Votre commentaire</label>
+    <textarea name="commentaire" id="commentaire" rows="5" required></textarea>
+    <button type="submit" class="btn">Poster</button>
   </form>
 </main>
 

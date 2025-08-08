@@ -1,42 +1,62 @@
 <?php
-include 'config.php';
+session_start();
+require_once 'config.php';
 include 'header.php';
 
-if (!isset($_SESSION['login'])) {
-    header('Location: connexion.php');
+if (!isset($_SESSION['user'])) {
+    header("Location: connexion.php");
     exit();
 }
 
-$erreur = '';
 $success = '';
+$errors = [];
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $new_login = $_POST['login'];
-    $new_password = $_POST['password'];
-    $confirm = $_POST['confirm'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $newLogin = trim($_POST['login']);
+    $newPassword = $_POST['password'];
+    $confirmPassword = $_POST['confirm_password'];
 
-    if ($new_password !== $confirm) {
-        $erreur = "Les mots de passe ne correspondent pas.";
+    if (empty($newLogin) || empty($newPassword) || empty($confirmPassword)) {
+        $errors[] = "Tous les champs sont obligatoires.";
+    } elseif ($newPassword !== $confirmPassword) {
+        $errors[] = "Les mots de passe ne correspondent pas.";
     } else {
-        $hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $update = $pdo->prepare("UPDATE utilisateurs SET login = ?, password = ? WHERE id = ?");
-        $update->execute([$new_login, $hash, $_SESSION['id']]);
-        $_SESSION['login'] = $new_login;
-        $success = "Profil mis à jour.";
+        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("UPDATE utilisateurs SET login = ?, password = ? WHERE id = ?");
+        $stmt->execute([$newLogin, $hash, $_SESSION['user']['id']]);
+        $_SESSION['user']['login'] = $newLogin;
+        $success = "Profil mis à jour avec succès.";
     }
 }
 ?>
 
-<main>
-  <h2>Modifier le profil</h2>
+<main class="form-page">
+  <h2>Modifier mon profil</h2>
+
+  <?php if ($success): ?>
+    <div class="success-box"><?= htmlspecialchars($success) ?></div>
+  <?php endif; ?>
+
+  <?php if ($errors): ?>
+    <div class="error-box">
+      <?php foreach ($errors as $e): ?>
+        <p><?= htmlspecialchars($e) ?></p>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+
   <form method="POST">
-    <input type="text" name="login" value="<?= $_SESSION['login'] ?>" required>
-    <input type="password" name="password" placeholder="Nouveau mot de passe" required>
-    <input type="password" name="confirm" placeholder="Confirmer le mot de passe" required>
-    <button type="submit">Modifier</button>
+    <label for="login">Nouveau login</label>
+    <input type="text" name="login" id="login" value="<?= htmlspecialchars($_SESSION['user']['login']) ?>" required>
+
+    <label for="password">Nouveau mot de passe</label>
+    <input type="password" name="password" id="password" required>
+
+    <label for="confirm_password">Confirmer le mot de passe</label>
+    <input type="password" name="confirm_password" id="confirm_password" required>
+
+    <button type="submit" class="btn">Mettre à jour</button>
   </form>
-  <p class="error"><?= $erreur ?></p>
-  <p class="success"><?= $success ?></p>
 </main>
 
 <?php include 'footer.php'; ?>

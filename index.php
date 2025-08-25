@@ -4,9 +4,9 @@
     <h1>Bienvenue sur le Livre d'or</h1>
     <p>Découvrez ce que les visiteurs pensent de nous, ou partagez vous-même votre avis !</p>
     <div class="cta">
-      <a href="livre-or.php" class="btn">Voir les commentaires</a>
+      <button onclick="window.location.href='livre-or.php'" class="btn">Voir les commentaires</button>
       <?php if (!isset($_SESSION['login'])): ?>
-        <a href="inscription.php" class="btn secondary">Créer un compte</a>
+        <button onclick="window.location.href='inscription.php'" class="btn secondary">Créer un compte</button>
       <?php endif; ?>
     </div>
   </section>
